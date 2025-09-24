@@ -1,13 +1,11 @@
 // Pinata configuration
-const PINATA_JWT = process.env.PINATA_JWT || process.env.PINATA_JWT_TOKEN || '';
+const PINATA_JWT_RAW = process.env.PINATA_JWT || process.env.PINATA_JWT_TOKEN || '';
+const PINATA_JWT = PINATA_JWT_RAW.trim().replace(/^Bearer\s+/i, '').replace(/\s+/g, '');
 const PINATA_BASE_URL = 'https://api.pinata.cloud';
 const PINATA_GATEWAY = process.env.PINATA_GATEWAY || 'https://gateway.pinata.cloud';
 
 /**
- * Upload a file to IPFS
- * @param {Buffer} fileBuffer - File buffer to upload
- * @param {string} filename - Original filename
- * @returns {Promise<string>} - IPFS hash (CID)
+ * Upload a file to IPFS via Pinata
  */
 const uploadToIPFS = async (fileBuffer, filename) => {
   try {
@@ -19,7 +17,6 @@ const uploadToIPFS = async (fileBuffer, filename) => {
     const blob = new Blob([fileBuffer]);
     formData.append('file', blob, filename || 'upload');
 
-    // Optional metadata and options must be sent as plain text fields (JSON strings)
     const metadata = { name: filename || 'upload' };
     formData.append('pinataMetadata', JSON.stringify(metadata));
 
@@ -47,33 +44,7 @@ const uploadToIPFS = async (fileBuffer, filename) => {
 };
 
 /**
- * Upload base64 encoded file to IPFS
- * @param {string} base64Data - Base64 encoded file data
- * @param {string} filename - Original filename
- * @returns {Promise<string>} - IPFS hash (CID)
- */
-const uploadBase64ToIPFS = async (base64Data, filename) => {
-  try {
-    // Remove data URL prefix if present
-    const base64String = base64Data.includes(',') 
-      ? base64Data.split(',')[1] 
-      : base64Data;
-    
-    // Convert base64 to buffer
-    const fileBuffer = Buffer.from(base64String, 'base64');
-    
-    return await uploadToIPFS(fileBuffer, filename);
-  } catch (error)
-  {
-    console.error('Error uploading base64 to IPFS:', error);
-    throw new Error(`Failed to upload base64 file to IPFS: ${error.message}`);
-  }
-};
-
-/**
- * Retrieve file from IPFS
- * @param {string} cid - IPFS content identifier
- * @returns {Promise<Buffer>} - File buffer
+ * Retrieve via gateway
  */
 const getFromIPFS = async (cid) => {
   try {
@@ -90,8 +61,7 @@ const getFromIPFS = async (cid) => {
 };
 
 /**
- * Check if IPFS client is connected - MODIFIED TO AVOID VERSION CHECK
- * @returns {Promise<boolean>} - Connection status
+ * Check Pinata auth
  */
 const isIPFSConnected = async () => {
   try {
@@ -112,6 +82,17 @@ const isIPFSConnected = async () => {
   } catch (error) {
     console.error('Pinata connection failed:', error);
     return false;
+  }
+};
+
+const uploadBase64ToIPFS = async (base64Data, filename) => {
+  try {
+    const base64String = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+    const fileBuffer = Buffer.from(base64String, 'base64');
+    return await uploadToIPFS(fileBuffer, filename);
+  } catch (error) {
+    console.error('Error uploading base64 to IPFS:', error);
+    throw new Error(`Failed to upload base64 file to IPFS: ${error.message}`);
   }
 };
 
