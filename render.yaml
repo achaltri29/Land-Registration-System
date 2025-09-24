@@ -5,7 +5,6 @@ services:
     rootDir: backend
     buildCommand: npm install
     startCommand: node server.js
-    plan: free
     envVars:
       - key: CONTRACT_ADDRESS
         sync: false
@@ -24,7 +23,6 @@ services:
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: build
-    plan: free
     envVars:
       - key: REACT_APP_CONTRACT_ADDRESS
         sync: false
