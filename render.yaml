@@ -29,7 +29,4 @@ services:
       - key: REACT_APP_CONTRACT_ADDRESS
         sync: false
       - key: REACT_APP_API_URL
-        fromService:
-          type: web
-          name: land-registry-backend
-          property: url
+        value: https://REPLACE_WITH_BACKEND_URL
