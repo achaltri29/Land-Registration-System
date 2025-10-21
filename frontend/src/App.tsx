@@ -43,6 +43,13 @@ function App() {
   });
 
   const [activeTab, setActiveTab] = useState('register');
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
+
+  const showAlert = (message: string) => {
+    setAlertMessage(message);
+    setTimeout(() => setAlertMessage(null), 5000); // Hide after 5 seconds
+  };
 
   const checkWalletConnection = useCallback(async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -66,7 +73,7 @@ function App() {
   const connectWallet = async () => {
     try {
       if (typeof window.ethereum === 'undefined') {
-        alert('Please install MetaMask!');
+        showAlert('Please install MetaMask!');
         return;
       }
 
@@ -80,22 +87,32 @@ function App() {
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: sepoliaChainId }],
           });
-        } catch (switchError) {
-          // If Sepolia is not added, add it
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: sepoliaChainId,
-              chainName: 'Sepolia Test Network',
-              rpcUrls: ['https://sepolia.infura.io/v3/'],
-              nativeCurrency: {
-                name: 'SepoliaETH',
-                symbol: 'SepoliaETH',
-                decimals: 18
-              },
-              blockExplorerUrls: ['https://sepolia.etherscan.io']
-            }]
-          });
+        } catch (switchError: any) {
+          // This error code indicates that the chain has not been added to MetaMask.
+          if (switchError.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: sepoliaChainId,
+                  chainName: 'Sepolia Test Network',
+                  rpcUrls: ['https://sepolia.infura.io/v3/'],
+                  nativeCurrency: {
+                    name: 'SepoliaETH',
+                    symbol: 'SepoliaETH',
+                    decimals: 18
+                  },
+                  blockExplorerUrls: ['https://sepolia.etherscan.io']
+                }]
+              });
+            } catch (addError) {
+              showAlert('Failed to add Sepolia network to MetaMask.');
+              return;
+            }
+          } else {
+            showAlert('Failed to switch to Sepolia network.');
+            return;
+          }
         }
       }
 
@@ -104,7 +121,7 @@ function App() {
       const signer = await provider.getSigner();
       
       if (!CONTRACT_ADDRESS) {
-        alert('Contract address not configured!');
+        showAlert('Contract address not configured!');
         return;
       }
 
@@ -129,7 +146,7 @@ function App() {
     } catch (error) {
       console.error('Error connecting wallet:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Failed to connect wallet: ${errorMessage}`);
+      showAlert(`Failed to connect wallet: ${errorMessage}`);
     }
   };
 
@@ -162,13 +179,16 @@ function App() {
 
   return (
     <div className="App">
+      {alertMessage && <div className="alert-popup">{alertMessage}</div>}
       <header className="App-header">
         <h1>🏠 Blockchain Land Registry System</h1>
-        <WalletConnection 
-          appState={appState}
-          onConnect={connectWallet}
-          onDisconnect={disconnectWallet}
-        />
+        {appState.isConnected && (
+            <WalletConnection 
+                appState={appState}
+                onConnect={connectWallet}
+                onDisconnect={disconnectWallet}
+            />
+        )}
       </header>
 
       <main className="App-main">
@@ -182,11 +202,10 @@ function App() {
                 Register Property
               </button>
               <button 
-                className={activeTab === 'admin' ? 'active' : ''}
-                onClick={() => setActiveTab('admin')}
-                disabled={!appState.isAdmin}
+                className={activeTab === 'search' ? 'active' : ''}
+                onClick={() => setActiveTab('search')}
               >
-                Admin Dashboard
+                Search Property
               </button>
               <button 
                 className={activeTab === 'transfer' ? 'active' : ''}
@@ -195,10 +214,11 @@ function App() {
                 Transfer Ownership
               </button>
               <button 
-                className={activeTab === 'search' ? 'active' : ''}
-                onClick={() => setActiveTab('search')}
+                className={activeTab === 'admin' ? 'active' : ''}
+                onClick={() => setActiveTab('admin')}
+                disabled={!appState.isAdmin}
               >
-                Search Property
+                Admin Dashboard
               </button>
             </nav>
 
@@ -209,7 +229,7 @@ function App() {
         ) : (
           <div className="welcome-message">
             <h2>Welcome to the Blockchain Land Registry System</h2>
-            <p>Connect your MetaMask wallet to get started</p>
+            <p>Secure, transparent, and efficient property management. Connect your wallet to begin.</p>
             <button onClick={connectWallet} className="connect-button">
               Connect MetaMask
             </button>
@@ -221,3 +241,4 @@ function App() {
 }
 
 export default App;
+

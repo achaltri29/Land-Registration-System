@@ -12,6 +12,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
   const [totalProperties, setTotalProperties] = useState(0);
 
   const fetchTotalProperties = useCallback(async () => {
+    if (!appState.contract) return;
     try {
       const count = await appState.contract.getTotalProperties();
       setTotalProperties(Number(count));
@@ -48,51 +49,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
       setPropertyId('');
       fetchTotalProperties();
     } catch (error: any) {
-      setMessage(`Error: ${error.message}`);
+        const errorMessage = error?.reason || error.message || "An unknown error occurred.";
+        setMessage(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
   };
-
-  const verifyViaBackend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    setLoading(true);
-    setMessage('');
-
-    try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_URL}/admin/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          propertyId: propertyId
-        })
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        setMessage(`Property ${propertyId} verified successfully! Transaction: ${result.transactionHash}`);
-        setPropertyId('');
-        fetchTotalProperties();
-      } else {
-        setMessage(`Error: ${result.error}`);
-      }
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  
   if (!appState.isAdmin) {
     return (
       <div>
         <h2>Admin Dashboard</h2>
-        <div className="error-message">
+        <div className="message error-message">
           Access denied. Only admin users can access this section.
         </div>
       </div>
@@ -103,16 +71,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
     <div>
       <h2>Admin Dashboard</h2>
       
-      <div className="property-card">
+      <div className="card">
         <h3>System Statistics</h3>
         <div className="property-detail">
-          <strong>Total Properties:</strong> {totalProperties}
+          <strong>Total Properties Registered:</strong> <span>{totalProperties}</span>
         </div>
       </div>
 
-      <div className="property-card">
+      <div className="card">
         <h3>Verify Property</h3>
-        <p>Enter a property ID to verify it as a valid property.</p>
+        <p>Enter a property ID to approve and validate its registration on the blockchain.</p>
         
         <form onSubmit={handleVerifyProperty}>
           <div className="form-group">
@@ -130,56 +98,27 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
 
           <button 
             type="submit" 
-            className="submit-button"
-            disabled={loading}
+            className="button button-primary"
+            disabled={loading || !propertyId}
           >
-            {loading ? 'Verifying...' : 'Verify Property (Direct)'}
+            {loading ? 'Verifying...' : 'Verify Property'}
           </button>
         </form>
-
-        <div style={{ margin: '20px 0', textAlign: 'center' }}>
-          <strong>OR</strong>
-        </div>
-
-        <form onSubmit={verifyViaBackend}>
-          <div className="form-group">
-            <label htmlFor="propertyIdBackend">Property ID (via Backend):</label>
-            <input
-              type="number"
-              id="propertyIdBackend"
-              value={propertyId}
-              onChange={(e) => setPropertyId(e.target.value)}
-              placeholder="e.g., 1"
-              min="1"
-              required
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            className="submit-button"
-            disabled={loading}
-            style={{ background: 'linear-gradient(45deg, #ff6b6b, #ee5a24)' }}
-          >
-            {loading ? 'Verifying...' : 'Verify Property (Backend)'}
-          </button>
-        </form>
-
-        {message && (
-          <div className={message.includes('Error') ? 'error-message' : 'success-message'}>
-            {message}
-          </div>
-        )}
       </div>
 
-      <div className="property-card">
-        <h3>Admin Actions</h3>
-        <p>As an admin, you can:</p>
-        <ul style={{ textAlign: 'left', color: 'rgba(255, 255, 255, 0.8)' }}>
-          <li>Verify property registrations</li>
-          <li>Monitor system activity</li>
-          <li>Access all property records</li>
-          <li>Oversee transfer processes</li>
+      {message && (
+        <div className={`message ${message.includes('Error') ? 'error-message' : 'success-message'}`}>
+          {message}
+        </div>
+      )}
+
+      <div className="card">
+        <h3>Admin Responsibilities</h3>
+        <ul style={{ paddingLeft: '20px', color: 'var(--text-light-color)' }}>
+          <li>Verify the authenticity of property registrations.</li>
+          <li>Ensure all submitted documents are correct and valid.</li>
+          <li>Monitor system activity for fraudulent behavior.</li>
+          <li>Oversee the integrity of property transfer processes.</li>
         </ul>
       </div>
     </div>

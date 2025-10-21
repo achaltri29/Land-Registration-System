@@ -8,24 +8,22 @@ interface WalletConnectionProps {
 }
 
 const WalletConnection: React.FC<WalletConnectionProps> = ({ appState, onConnect, onDisconnect }) => {
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
 
   return (
     <div className="wallet-info">
-      {appState.isConnected ? (
+      {appState.isConnected && appState.account ? (
         <div>
-          <p><strong>Connected:</strong> {appState.account && formatAddress(appState.account)}</p>
-          {appState.isAdmin && <span className="admin-badge">ADMIN</span>}
-          <button onClick={onDisconnect} className="submit-button" style={{ marginTop: '10px' }}>
+          <p>
+            {appState.isAdmin && <span className="admin-badge">ADMIN</span>}
+            <span className="address">{appState.account}</span>
+          </p>
+          <button onClick={onDisconnect} className="button button-danger" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
             Disconnect
           </button>
         </div>
       ) : (
         <div>
-          <p>Wallet not connected</p>
-          <button onClick={onConnect} className="submit-button">
+          <button onClick={onConnect} className="button button-primary">
             Connect Wallet
           </button>
         </div>
