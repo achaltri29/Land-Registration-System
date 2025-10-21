@@ -13,20 +13,16 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
   const [confirmForm, setConfirmForm] = useState({
     propertyId: ''
   });
+  const [cancelForm, setCancelForm] = useState({
+    propertyId: ''
+  });
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleInitiateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, formSetter: React.Dispatch<React.SetStateAction<any>>) => {
     const { name, value } = e.target;
-    setInitiateForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setConfirmForm(prev => ({
+    formSetter((prev: any) => ({
       ...prev,
       [name]: value
     }));
@@ -36,7 +32,7 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
     e.preventDefault();
     
     if (!appState.contract || !appState.signer) {
-      setMessage('Please connect your wallet first');
+      setMessage('Error: Please connect your wallet first');
       return;
     }
 
@@ -54,7 +50,8 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
       setMessage(`Transfer initiated successfully! Transaction: ${tx.hash}`);
       setInitiateForm({ propertyId: '', buyerAddress: '' });
     } catch (error: any) {
-      setMessage(`Error: ${error.message}`);
+      const errorMessage = error?.reason || error.message || "An unknown error occurred.";
+      setMessage(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -64,7 +61,7 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
     e.preventDefault();
     
     if (!appState.contract || !appState.signer) {
-      setMessage('Please connect your wallet first');
+      setMessage('Error: Please connect your wallet first');
       return;
     }
 
@@ -72,28 +69,14 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
     setMessage('');
 
     try {
-      // Guard: only the pending buyer can confirm the transfer
-      const property = await appState.contract.getProperty(confirmForm.propertyId);
-      const pendingBuyer: string = property.pendingBuyer;
-      const activeAccount = (appState.account || '').toLowerCase();
-      if (!pendingBuyer || pendingBuyer.toLowerCase() === '0x0000000000000000000000000000000000000000') {
-        setMessage('Error: No pending transfer found for this property');
-        setLoading(false);
-        return;
-      }
-      if (pendingBuyer.toLowerCase() !== activeAccount) {
-        setMessage(`Error: Switch to the buyer account (${pendingBuyer.slice(0,6)}...${pendingBuyer.slice(-4)}) to confirm`);
-        setLoading(false);
-        return;
-      }
-
       const tx = await appState.contract.confirmTransfer(confirmForm.propertyId);
       await tx.wait();
 
       setMessage(`Transfer completed successfully! Transaction: ${tx.hash}`);
       setConfirmForm({ propertyId: '' });
     } catch (error: any) {
-      setMessage(`Error: ${error.message}`);
+      const errorMessage = error?.reason || error.message || "An unknown error occurred.";
+      setMessage(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -103,7 +86,7 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
     e.preventDefault();
     
     if (!appState.contract || !appState.signer) {
-      setMessage('Please connect your wallet first');
+      setMessage('Error: Please connect your wallet first');
       return;
     }
 
@@ -111,13 +94,14 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
     setMessage('');
 
     try {
-      const tx = await appState.contract.cancelTransfer(confirmForm.propertyId);
+      const tx = await appState.contract.cancelTransfer(cancelForm.propertyId);
       await tx.wait();
 
       setMessage(`Transfer cancelled successfully! Transaction: ${tx.hash}`);
-      setConfirmForm({ propertyId: '' });
+      setCancelForm({ propertyId: '' });
     } catch (error: any) {
-      setMessage(`Error: ${error.message}`);
+      const errorMessage = error?.reason || error.message || "An unknown error occurred.";
+      setMessage(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -126,10 +110,14 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
   return (
     <div>
       <h2>Transfer Property Ownership</h2>
-      
-      <div className="property-card">
-        <h3>Initiate Transfer (Seller)</h3>
-        <p>As a property owner, you can initiate a transfer to a buyer.</p>
+      {message && (
+        <div className={`message ${message.includes('Error') ? 'error-message' : 'success-message'}`}>
+          {message}
+        </div>
+      )}
+      <div className="card">
+        <h3>Step 1: Initiate Transfer (Seller)</h3>
+        <p>As the current property owner, you can initiate a transfer to a buyer's address.</p>
         
         <form onSubmit={handleInitiateTransfer}>
           <div className="form-group">
@@ -139,7 +127,7 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
               id="initiatePropertyId"
               name="propertyId"
               value={initiateForm.propertyId}
-              onChange={handleInitiateChange}
+              onChange={(e) => handleInputChange(e, setInitiateForm)}
               placeholder="e.g., 1"
               min="1"
               required
@@ -147,13 +135,13 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="buyerAddress">Buyer Address:</label>
+            <label htmlFor="buyerAddress">Buyer's Wallet Address:</label>
             <input
               type="text"
               id="buyerAddress"
               name="buyerAddress"
               value={initiateForm.buyerAddress}
-              onChange={handleInitiateChange}
+              onChange={(e) => handleInputChange(e, setInitiateForm)}
               placeholder="0x..."
               required
             />
@@ -161,7 +149,7 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
 
           <button 
             type="submit" 
-            className="submit-button"
+            className="button button-primary"
             disabled={loading}
           >
             {loading ? 'Initiating...' : 'Initiate Transfer'}
@@ -169,9 +157,9 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
         </form>
       </div>
 
-      <div className="property-card">
-        <h3>Confirm Transfer (Buyer)</h3>
-        <p>As a buyer, you can confirm a transfer initiated by the seller.</p>
+      <div className="card">
+        <h3>Step 2: Confirm Transfer (Buyer)</h3>
+        <p>As the designated buyer, you must confirm the transfer to complete the process.</p>
         
         <form onSubmit={handleConfirmTransfer}>
           <div className="form-group">
@@ -181,7 +169,7 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
               id="confirmPropertyId"
               name="propertyId"
               value={confirmForm.propertyId}
-              onChange={handleConfirmChange}
+              onChange={(e) => handleInputChange(e, setConfirmForm)}
               placeholder="e.g., 1"
               min="1"
               required
@@ -190,7 +178,7 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
 
           <button 
             type="submit" 
-            className="submit-button"
+            className="button button-primary"
             disabled={loading}
           >
             {loading ? 'Confirming...' : 'Confirm Transfer'}
@@ -198,9 +186,9 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
         </form>
       </div>
 
-      <div className="property-card">
-        <h3>Cancel Transfer (Seller)</h3>
-        <p>As a seller, you can cancel a transfer you initiated.</p>
+      <div className="card">
+        <h3>Cancel Pending Transfer (Seller)</h3>
+        <p>If you initiated a transfer in error, you can cancel it before the buyer confirms.</p>
         
         <form onSubmit={handleCancelTransfer}>
           <div className="form-group">
@@ -209,8 +197,8 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
               type="number"
               id="cancelPropertyId"
               name="propertyId"
-              value={confirmForm.propertyId}
-              onChange={handleConfirmChange}
+              value={cancelForm.propertyId}
+              onChange={(e) => handleInputChange(e, setCancelForm)}
               placeholder="e.g., 1"
               min="1"
               required
@@ -219,28 +207,21 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
 
           <button 
             type="submit" 
-            className="submit-button"
+            className="button button-danger"
             disabled={loading}
-            style={{ background: 'linear-gradient(45deg, #ef5350, #e53935)' }}
           >
             {loading ? 'Cancelling...' : 'Cancel Transfer'}
           </button>
         </form>
       </div>
 
-      {message && (
-        <div className={message.includes('Error') ? 'error-message' : 'success-message'}>
-          {message}
-        </div>
-      )}
-
-      <div className="property-card">
+      <div className="card">
         <h3>Transfer Process</h3>
-        <ol style={{ textAlign: 'left', color: 'rgba(255, 255, 255, 0.8)' }}>
-          <li><strong>Step 1:</strong> Seller initiates transfer by providing property ID and buyer address</li>
-          <li><strong>Step 2:</strong> Buyer confirms the transfer using the same property ID</li>
-          <li><strong>Step 3:</strong> Ownership is transferred and recorded on the blockchain</li>
-          <li><strong>Note:</strong> Only verified properties can be transferred</li>
+        <ol style={{ paddingLeft: '20px', color: 'var(--text-light-color)', listStylePosition: 'inside' }}>
+            <li><strong>Seller Initiates:</strong> Provides property ID and buyer's wallet address.</li>
+            <li><strong>Buyer Confirms:</strong> Uses their wallet to confirm the transfer.</li>
+            <li><strong>Ownership Transferred:</strong> The change is permanently recorded on the blockchain.</li>
+            <li><strong>Note:</strong> Only verified properties can be transferred to ensure security.</li>
         </ol>
       </div>
     </div>
@@ -248,3 +229,4 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
 };
 
 export default TransferOwnership;
+
