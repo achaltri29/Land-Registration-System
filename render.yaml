@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: land-registry-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: CONTRACT_ADDRESS
+        sync: false
+      - key: RPC_URL
+        sync: false
+      - key: PORT
+        value: "3001"
+      - key: PINATA_JWT
+        sync: false
+      - key: PINATA_GATEWAY
+        value: https://gateway.pinata.cloud
+
+  - type: web
+    name: land-registry-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_CONTRACT_ADDRESS
+        sync: false
+      - key: REACT_APP_API_URL
+        value: https://REPLACE_WITH_BACKEND_URL

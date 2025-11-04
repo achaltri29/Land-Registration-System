@@ -1,0 +1,413 @@
+/* --- Global Styles & Variables --- */
+:root {
+  --primary-color: #0052FF; /* A strong, trustworthy blue */
+  --primary-hover-color: #0045D1;
+  --secondary-color: #008060; /* A deep, professional green */
+  --danger-color: #D32F2F;
+  --danger-hover-color: #B71C1C;
+  --background-color: #F8F9FA; /* Light gray background */
+  --card-background-color: #FFFFFF;
+  --text-color: #212529; /* Dark gray for text */
+  --text-light-color: #6c757d;
+  --border-color: #dee2e6;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --border-radius: 8px;
+}
+
+/* --- Base Styles --- */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.App {
+  text-align: center;
+  min-height: 100vh;
+}
+
+/* --- Header --- */
+.App-header {
+  background: var(--card-background-color);
+  padding: 30px 40px 20px 40px; /* Increased top padding */
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end; /* Push all content to the right */
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative; /* Needed for absolute positioning of h1 */
+}
+
+.App-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%); /* Center the title perfectly */
+}
+
+/* --- Main Content --- */
+.App-main {
+  padding: 40px 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* --- Welcome Message (Not Connected State) --- */
+.welcome-message {
+  background: var(--card-background-color);
+  padding: 60px 40px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.welcome-message h2 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+  color: var(--text-color);
+}
+
+.welcome-message p {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  color: var(--text-light-color);
+}
+
+.connect-button {
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.connect-button:hover {
+  background-color: var(--primary-hover-color);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 82, 255, 0.2);
+}
+
+/* --- Wallet Connection Info --- */
+.wallet-info {
+  text-align: right;
+}
+
+.wallet-info p {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: var(--text-light-color);
+}
+
+.wallet-info .address {
+  font-weight: 600;
+  color: var(--text-color);
+  background-color: #e9ecef;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.wallet-info .admin-badge {
+  background-color: var(--secondary-color);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  margin-right: 10px;
+}
+
+/* --- Tab Navigation --- */
+.tab-navigation {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 15px;
+}
+
+.tab-navigation button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: var(--text-light-color);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.tab-navigation button:hover:not(:disabled) {
+  background-color: #e9ecef;
+  color: var(--text-color);
+}
+
+.tab-navigation button.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.tab-navigation button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tab-content {
+  background: transparent; /* No background needed, cards will have it */
+}
+
+.tab-content h2 {
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+}
+
+/* --- Cards --- */
+.card {
+  background: var(--card-background-color);
+  border-radius: var(--border-radius);
+  padding: 25px 30px;
+  margin-bottom: 25px;
+  box-shadow: var(--box-shadow);
+  text-align: left;
+}
+
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.25rem;
+  color: var(--text-color);
+}
+
+/* --- Form Styles --- */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: #FFF;
+  color: var(--text-color);
+  font-size: 1rem;
+  box-sizing: border-box; /* Important for width calculation */
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #adb5bd;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 82, 255, 0.2);
+}
+
+/* --- Buttons --- */
+.button {
+  display: inline-block;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-align: center;
+}
+
+.button-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.button-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 82, 255, 0.2);
+}
+
+.button-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.button-danger:hover:not(:disabled) {
+    background-color: var(--danger-hover-color);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- File Upload --- */
+.file-upload {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f8f9fa;
+}
+
+.file-upload:hover {
+  border-color: var(--primary-color);
+  background-color: #eef2ff;
+}
+
+.file-upload input {
+  display: none;
+}
+
+.file-upload-text {
+  color: var(--text-light-color);
+}
+
+/* --- Messages (Error/Success) --- */
+.message {
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin: 20px 0;
+  text-align: center;
+  word-break: break-word;
+}
+
+.error-message {
+  background-color: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #B91C1C;
+}
+
+.success-message {
+  background-color: #D1FAE5;
+  border: 1px solid #6EE7B7;
+  color: #065F46;
+}
+
+/* --- Property Details & History --- */
+.property-detail {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.property-detail:last-child {
+  border-bottom: none;
+}
+
+.property-detail strong {
+  color: var(--text-color);
+}
+
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.status-verified {
+  background-color: #D1FAE5;
+  color: #065F46;
+}
+
+.status-pending {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.status-unverified {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+.history-item {
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+  padding: 15px;
+  margin-bottom: 10px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.history-item .timestamp {
+  color: var(--text-light-color);
+  font-size: 12px;
+}
+
+.history-item .action {
+  color: var(--primary-color);
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+  .App-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    justify-content: center; /* Center content on mobile */
+  }
+  .App-header h1 {
+    position: static; /* Remove absolute positioning on mobile */
+    transform: none;
+    font-size: 1.5rem;
+    text-align: center;
+  }
+  .wallet-info {
+    width: 100%;
+    text-align: center;
+  }
+  .App-main {
+    padding: 20px 15px;
+  }
+  .tab-navigation {
+    gap: 5px;
+  }
+  .tab-navigation button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+  .card {
+    padding: 20px;
+  }
+}
+
