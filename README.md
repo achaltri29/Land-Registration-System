@@ -7,10 +7,7 @@ A complete end-to-end decentralized land/property registration and transfer syst
 - **Property Registration**: Register land properties with document verification
 - **Admin Verification**: Government authority approval system
 - **Ownership Transfer**: Secure transfer between parties (seller → buyer)
-<<<<<<< HEAD
-=======
 - **Mortgages & Liens Management**: Place and clear liens on verified properties
->>>>>>> mayank/main
 - **Document Storage**: IPFS integration for decentralized document storage
 - **Owner History**: Complete chronological ownership tracking
 - **Event Logging**: Transparent blockchain event logging
@@ -21,13 +18,13 @@ A complete end-to-end decentralized land/property registration and transfer syst
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   React Frontend│    │  Node.js Backend│    │ Ethereum Network│
-│   (MetaMask)    │◄──►│   (Express)     │◄──►│  (Smart Contract)│
+│   (MetaMask)    │◄──►│   (Express)     │◄──►│ (Smart Contract)│
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                 │
                                 ▼
                        ┌─────────────────┐
                        │   IPFS Network  │
-                       │ (Document Storage)│
+                       (Document Storage)│
                        └─────────────────┘
 ```
 
@@ -169,8 +166,6 @@ npx hardhat coverage
 - Use "Search Property" tab to view property details
 - Enter property ID to see complete information and ownership history
 
-<<<<<<< HEAD
-=======
 ### 6. Manage Mortgages & Liens
 - **Place a Lien (Property Owner)**:
   - Navigate to "Mortgages & Liens" tab
@@ -185,7 +180,6 @@ npx hardhat coverage
   - Click "Clear Lien" (only the lender who placed the lien can clear it)
   - Once cleared, the property can be transferred again
 
->>>>>>> mayank/main
 ## 🔧 Smart Contract Features
 
 ### Core Functions
@@ -194,12 +188,9 @@ npx hardhat coverage
 - `initiateTransfer()` - Start ownership transfer
 - `confirmTransfer()` - Complete transfer
 - `updateDocumentHash()` - Update property documents
-<<<<<<< HEAD
-=======
 - `placeLien()` - Place a mortgage/lien on a verified property (owner only)
 - `clearLien()` - Clear an active lien (lender only)
 - `getLienInfo()` - Retrieve lien information for a property
->>>>>>> mayank/main
 
 ### Events
 - `PropertyRegistered` - New property registered
@@ -207,11 +198,8 @@ npx hardhat coverage
 - `TransferInitiated` - Transfer process started
 - `TransferCompleted` - Ownership transferred
 - `DocumentUpdated` - Documents updated
-<<<<<<< HEAD
-=======
 - `LienPlaced` - Lien/mortgage placed on property
 - `LienCleared` - Lien/mortgage cleared from property
->>>>>>> mayank/main
 
 ## 🌐 IPFS Integration
 
@@ -227,11 +215,6 @@ The system uses IPFS for decentralized document storage:
 - **Access Control**: Only property owners can initiate transfers
 - **Admin Verification**: Properties must be verified before transfer
 - **Two-Step Transfer**: Initiate + Confirm process
-<<<<<<< HEAD
-- **Event Logging**: All actions are logged on blockchain
-- **Document Integrity**: IPFS hashes ensure document authenticity
-
-=======
 - **Lien Protection**: Properties with active liens cannot be transferred
 - **Lender Authorization**: Only the lender who placed a lien can clear it
 - **Event Logging**: All actions are logged on blockchain
@@ -277,7 +260,6 @@ The system includes a comprehensive mortgage and lien management feature that al
 - The `noActiveLien` modifier prevents transfers when a lien is active
 - All lien operations emit events for transparency and tracking
 
->>>>>>> mayank/main
 ## 🛠️ Development
 
 ### Adding New Features
@@ -353,7 +335,3 @@ For support and questions:
 - Create an issue in the repository
 - Check the troubleshooting section
 - Review the smart contract documentation
-
----
-
-**Built with ❤️ for the blockchain community**
