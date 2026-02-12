@@ -7,6 +7,10 @@ A complete end-to-end decentralized land/property registration and transfer syst
 - **Property Registration**: Register land properties with document verification
 - **Admin Verification**: Government authority approval system
 - **Ownership Transfer**: Secure transfer between parties (seller → buyer)
+<<<<<<< HEAD
+=======
+- **Mortgages & Liens Management**: Place and clear liens on verified properties
+>>>>>>> mayank/main
 - **Document Storage**: IPFS integration for decentralized document storage
 - **Owner History**: Complete chronological ownership tracking
 - **Event Logging**: Transparent blockchain event logging
@@ -165,6 +169,23 @@ npx hardhat coverage
 - Use "Search Property" tab to view property details
 - Enter property ID to see complete information and ownership history
 
+<<<<<<< HEAD
+=======
+### 6. Manage Mortgages & Liens
+- **Place a Lien (Property Owner)**:
+  - Navigate to "Mortgages & Liens" tab
+  - Enter property ID (must be verified and owned by you)
+  - Provide lender address, amount (in wei), and details/reference
+  - Click "Place Lien" to secure the property with a mortgage/lien
+  - Note: Properties with active liens cannot be transferred
+  
+- **Clear a Lien (Lender)**:
+  - Navigate to "Mortgages & Liens" tab
+  - Enter property ID with an active lien
+  - Click "Clear Lien" (only the lender who placed the lien can clear it)
+  - Once cleared, the property can be transferred again
+
+>>>>>>> mayank/main
 ## 🔧 Smart Contract Features
 
 ### Core Functions
@@ -173,6 +194,12 @@ npx hardhat coverage
 - `initiateTransfer()` - Start ownership transfer
 - `confirmTransfer()` - Complete transfer
 - `updateDocumentHash()` - Update property documents
+<<<<<<< HEAD
+=======
+- `placeLien()` - Place a mortgage/lien on a verified property (owner only)
+- `clearLien()` - Clear an active lien (lender only)
+- `getLienInfo()` - Retrieve lien information for a property
+>>>>>>> mayank/main
 
 ### Events
 - `PropertyRegistered` - New property registered
@@ -180,6 +207,11 @@ npx hardhat coverage
 - `TransferInitiated` - Transfer process started
 - `TransferCompleted` - Ownership transferred
 - `DocumentUpdated` - Documents updated
+<<<<<<< HEAD
+=======
+- `LienPlaced` - Lien/mortgage placed on property
+- `LienCleared` - Lien/mortgage cleared from property
+>>>>>>> mayank/main
 
 ## 🌐 IPFS Integration
 
@@ -195,9 +227,57 @@ The system uses IPFS for decentralized document storage:
 - **Access Control**: Only property owners can initiate transfers
 - **Admin Verification**: Properties must be verified before transfer
 - **Two-Step Transfer**: Initiate + Confirm process
+<<<<<<< HEAD
 - **Event Logging**: All actions are logged on blockchain
 - **Document Integrity**: IPFS hashes ensure document authenticity
 
+=======
+- **Lien Protection**: Properties with active liens cannot be transferred
+- **Lender Authorization**: Only the lender who placed a lien can clear it
+- **Event Logging**: All actions are logged on blockchain
+- **Document Integrity**: IPFS hashes ensure document authenticity
+
+## 🏦 Mortgages & Liens System
+
+The system includes a comprehensive mortgage and lien management feature that allows property owners to secure their properties with liens while protecting lenders' interests.
+
+### How It Works
+
+1. **Placing a Lien**:
+   - Property must be verified by admin before a lien can be placed
+   - Only the current property owner can place a lien
+   - Owner specifies the lender address, amount (in wei), and details
+   - Once placed, the property cannot be transferred until the lien is cleared
+
+2. **Clearing a Lien**:
+   - Only the lender who placed the lien can clear it
+   - Typically done after loan payoff or mortgage satisfaction
+   - Once cleared, the property becomes transferable again
+
+3. **Transfer Restrictions**:
+   - Properties with active liens cannot be transferred
+   - This protects lenders by ensuring properties with outstanding debts cannot be sold without clearing the lien first
+   - Both `initiateTransfer()` and `confirmTransfer()` check for active liens
+
+### Use Cases
+
+- **Mortgages**: Property owners can secure mortgages by placing liens on their properties
+- **Debt Security**: Lenders can secure loans using property as collateral
+- **Legal Liens**: Government or legal entities can place liens for tax or legal purposes
+- **Transparency**: All lien information is publicly visible on the blockchain
+
+### Technical Details
+
+- Lien information is stored in the `Property` struct:
+  - `lienActive`: Boolean flag indicating if a lien exists
+  - `lienLender`: Address of the lender holding the lien
+  - `lienAmount`: Amount secured by the lien (in wei)
+  - `lienDetails`: Optional description or reference number
+
+- The `noActiveLien` modifier prevents transfers when a lien is active
+- All lien operations emit events for transparency and tracking
+
+>>>>>>> mayank/main
 ## 🛠️ Development
 
 ### Adding New Features

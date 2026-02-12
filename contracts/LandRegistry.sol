@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract LandRegistry is Ownable {
+    constructor() Ownable(msg.sender) {
+    // This passes the deployer's address to the Ownable contract
+    }
     // Property structure
     struct Property {
         uint256 id;
@@ -13,6 +16,11 @@ contract LandRegistry is Ownable {
         string ipfsDocHash;
         bool verified;
         address pendingBuyer;
+        // Lien/Mortgage fields
+        bool lienActive;            // True when a lien is placed on the property
+        address lienLender;         // Lender who holds the lien
+        uint256 lienAmount;         // Optional: amount secured by the lien
+        string lienDetails;         // Optional: description/reference number
     }
 
     // Owner history structure
@@ -60,6 +68,21 @@ contract LandRegistry is Ownable {
         string newIpfsDocHash
     );
 
+    // Lien/Mortgage events
+    event LienPlaced(
+        uint256 indexed propertyId,
+        address indexed owner,
+        address indexed lender,
+        uint256 amount,
+        string details
+    );
+
+    event LienCleared(
+        uint256 indexed propertyId,
+        address indexed lender,
+        address indexed owner
+    );
+
     // Modifiers
     modifier propertyExists(uint256 _propertyId) {
         require(_propertyId > 0 && _propertyId <= propertyCounter, "Property does not exist");
@@ -73,6 +96,11 @@ contract LandRegistry is Ownable {
 
     modifier onlyVerifiedProperty(uint256 _propertyId) {
         require(properties[_propertyId].verified, "Property not verified");
+        _;
+    }
+
+    modifier noActiveLien(uint256 _propertyId) {
+        require(!properties[_propertyId].lienActive, "Active lien blocks action");
         _;
     }
 
@@ -103,7 +131,11 @@ contract LandRegistry is Ownable {
             area: _area,
             ipfsDocHash: _ipfsDocHash,
             verified: false,
-            pendingBuyer: address(0)
+            pendingBuyer: address(0),
+            lienActive: false,
+            lienLender: address(0),
+            lienAmount: 0,
+            lienDetails: ""
         });
 
         // Add to user's properties
@@ -175,6 +207,7 @@ contract LandRegistry is Ownable {
         propertyExists(_propertyId)
         onlyPropertyOwner(_propertyId)
         onlyVerifiedProperty(_propertyId)
+        noActiveLien(_propertyId)
     {
         require(_buyer != address(0), "Invalid buyer address");
         require(_buyer != msg.sender, "Cannot transfer to yourself");
@@ -196,6 +229,7 @@ contract LandRegistry is Ownable {
     {
         require(properties[_propertyId].pendingBuyer == msg.sender, "Not the pending buyer");
         require(properties[_propertyId].pendingBuyer != address(0), "No pending transfer");
+        require(!properties[_propertyId].lienActive, "Active lien blocks transfer");
 
         address previousOwner = properties[_propertyId].currentOwner;
         
@@ -215,6 +249,67 @@ contract LandRegistry is Ownable {
         }));
 
         emit TransferCompleted(_propertyId, previousOwner, msg.sender);
+    }
+
+    /**
+     * @dev Place a lien/mortgage on a verified property
+     * Only the current owner can place a lien and only when no lien is active
+     */
+    function placeLien(
+        uint256 _propertyId,
+        address _lender,
+        uint256 _amount,
+        string calldata _details
+    )
+        external
+        propertyExists(_propertyId)
+        onlyPropertyOwner(_propertyId)
+        onlyVerifiedProperty(_propertyId)
+    {
+        require(!properties[_propertyId].lienActive, "Lien already active");
+        require(_lender != address(0), "Invalid lender");
+
+        properties[_propertyId].lienActive = true;
+        properties[_propertyId].lienLender = _lender;
+        properties[_propertyId].lienAmount = _amount;
+        properties[_propertyId].lienDetails = _details;
+
+        emit LienPlaced(_propertyId, msg.sender, _lender, _amount, _details);
+    }
+
+    /**
+     * @dev Clear an active lien. Typically the lender clears after payoff.
+     * Either the lender or the owner can clear (depending on policy). Here: lender only.
+     */
+    function clearLien(uint256 _propertyId)
+        external
+        propertyExists(_propertyId)
+    {
+        require(properties[_propertyId].lienActive, "No active lien");
+        require(msg.sender == properties[_propertyId].lienLender, "Only lender can clear");
+
+        address ownerAddress = properties[_propertyId].currentOwner;
+        address lenderAddress = properties[_propertyId].lienLender;
+
+        properties[_propertyId].lienActive = false;
+        properties[_propertyId].lienLender = address(0);
+        properties[_propertyId].lienAmount = 0;
+        properties[_propertyId].lienDetails = "";
+
+        emit LienCleared(_propertyId, lenderAddress, ownerAddress);
+    }
+
+    /**
+     * @dev Get lien information for a property
+     */
+    function getLienInfo(uint256 _propertyId)
+        external
+        view
+        propertyExists(_propertyId)
+        returns (bool active, address lender, uint256 amount, string memory details)
+    {
+        Property storage p = properties[_propertyId];
+        return (p.lienActive, p.lienLender, p.lienAmount, p.lienDetails);
     }
 
     /**

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AppState } from '../types';
+import { waitForTransaction } from '../utils/transactionHelpers';
 
 interface RegisterPropertyProps {
   appState: AppState;
@@ -95,7 +96,7 @@ const RegisterProperty: React.FC<RegisterPropertyProps> = ({ appState }) => {
         hash
       );
 
-      await tx.wait();
+      await waitForTransaction(tx, appState.isLocalhost);
 
       setMessage(`Property registered successfully! Transaction: ${tx.hash}`);
       setFormData({ location: '', area: '', document: null });

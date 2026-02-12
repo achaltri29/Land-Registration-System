@@ -4,9 +4,11 @@ export interface AppState {
   provider: any;
   signer: any;
   contract: any;
+  readOnlyContract: any; // For view calls on localhost
   account: string | null;
   isAdmin: boolean;
   isConnected: boolean;
+  isLocalhost: boolean;
 }
 
 export interface Property {
@@ -17,6 +19,10 @@ export interface Property {
   ipfsDocHash: string;
   verified: boolean;
   pendingBuyer: string;
+  lienActive?: boolean;
+  lienLender?: string;
+  lienAmount?: string;
+  lienDetails?: string;
 }
 
 export interface OwnerHistory {

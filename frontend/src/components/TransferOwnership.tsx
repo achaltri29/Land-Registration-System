@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AppState } from '../types';
+import { waitForTransaction } from '../utils/transactionHelpers';
 
 interface TransferOwnershipProps {
   appState: AppState;
@@ -45,7 +46,7 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
         initiateForm.buyerAddress
       );
 
-      await tx.wait();
+      await waitForTransaction(tx, appState.isLocalhost);
 
       setMessage(`Transfer initiated successfully! Transaction: ${tx.hash}`);
       setInitiateForm({ propertyId: '', buyerAddress: '' });
@@ -70,7 +71,7 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
 
     try {
       const tx = await appState.contract.confirmTransfer(confirmForm.propertyId);
-      await tx.wait();
+      await waitForTransaction(tx, appState.isLocalhost);
 
       setMessage(`Transfer completed successfully! Transaction: ${tx.hash}`);
       setConfirmForm({ propertyId: '' });
@@ -95,7 +96,7 @@ const TransferOwnership: React.FC<TransferOwnershipProps> = ({ appState }) => {
 
     try {
       const tx = await appState.contract.cancelTransfer(cancelForm.propertyId);
-      await tx.wait();
+      await waitForTransaction(tx, appState.isLocalhost);
 
       setMessage(`Transfer cancelled successfully! Transaction: ${tx.hash}`);
       setCancelForm({ propertyId: '' });

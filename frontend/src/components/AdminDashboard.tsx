@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AppState } from '../types';
+import { waitForTransaction } from '../utils/transactionHelpers';
 
 interface AdminDashboardProps {
   appState: AppState;
@@ -12,14 +13,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
   const [totalProperties, setTotalProperties] = useState(0);
 
   const fetchTotalProperties = useCallback(async () => {
-    if (!appState.contract) return;
+    // Use readOnlyContract for view calls if available, otherwise fall back to contract
+    const contractToUse = appState.readOnlyContract || appState.contract;
+    if (!contractToUse) return;
     try {
-      const count = await appState.contract.getTotalProperties();
+      const count = await contractToUse.getTotalProperties();
       setTotalProperties(Number(count));
     } catch (error) {
       console.error('Error fetching total properties:', error);
     }
-  }, [appState.contract]);
+  }, [appState.readOnlyContract, appState.contract]);
 
   useEffect(() => {
     fetchTotalProperties();
@@ -43,7 +46,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
 
     try {
       const tx = await appState.contract.verifyProperty(propertyId);
-      await tx.wait();
+      await waitForTransaction(tx, appState.isLocalhost);
 
       setMessage(`Property ${propertyId} verified successfully! Transaction: ${tx.hash}`);
       setPropertyId('');

@@ -15,7 +15,10 @@ const SearchProperty: React.FC<SearchPropertyProps> = ({ appState }) => {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!appState.contract || !appState.signer) {
+    // Use readOnlyContract for view calls if available, otherwise fall back to contract
+    const contractToUse = appState.readOnlyContract || appState.contract;
+    
+    if (!contractToUse || !appState.signer) {
       setMessage('Error: Please connect your wallet first');
       return;
     }
@@ -26,8 +29,8 @@ const SearchProperty: React.FC<SearchPropertyProps> = ({ appState }) => {
     setOwnerHistory([]);
 
     try {
-      // Get property details
-      const propertyData = await appState.contract.getProperty(propertyId);
+      // Get property details - use read-only contract for view calls
+      const propertyData = await contractToUse.getProperty(propertyId);
       
       const propertyInfo: Property = {
         id: propertyData.id.toString(),
@@ -39,17 +42,72 @@ const SearchProperty: React.FC<SearchPropertyProps> = ({ appState }) => {
         pendingBuyer: propertyData.pendingBuyer
       };
 
+      // Try to get lien info if the contract supports it
+      try {
+        const lien = await contractToUse.getLienInfo(propertyId);
+        if (lien) {
+          propertyInfo.lienActive = lien[0];
+          propertyInfo.lienLender = lien[1];
+          propertyInfo.lienAmount = lien[2]?.toString?.() ?? '0';
+          propertyInfo.lienDetails = lien[3];
+        }
+      } catch (ignored) {
+        // Contract might be older without getLienInfo; ignore gracefully
+      }
+
       setProperty(propertyInfo);
 
-      // Get owner history
-      const history = await appState.contract.getOwnersHistory(propertyId);
+      // Get owner history - use read-only contract for view calls
+      const history = await contractToUse.getOwnersHistory(propertyId);
       const historyData: OwnerHistory[] = history.map((item: any) => ({
         owner: item.owner,
         timestamp: new Date(Number(item.timestamp) * 1000).toLocaleString(),
         action: item.action
       }));
 
-      setOwnerHistory(historyData.reverse()); // Show most recent first
+      // Augment history with lien events (LienPlaced, LienCleared)
+      try {
+        const provider = (contractToUse as any).runner?.provider || (contractToUse as any).provider;
+        // LienPlaced events
+        if ((contractToUse as any).filters?.LienPlaced) {
+          const placedFilter = (contractToUse as any).filters.LienPlaced(Number(propertyId));
+          const placedLogs = await (contractToUse as any).queryFilter(placedFilter);
+          for (const log of placedLogs) {
+            const lender: string = log.args?.lender ?? log.args?.[2];
+            const block = provider && log.blockNumber ? await provider.getBlock(log.blockNumber) : null;
+            historyData.push({
+              owner: lender,
+              action: 'lien_placed',
+              timestamp: new Date(((block?.timestamp ?? 0) as number) * 1000).toLocaleString()
+            });
+          }
+        }
+        // LienCleared events
+        if ((contractToUse as any).filters?.LienCleared) {
+          const clearedFilter = (contractToUse as any).filters.LienCleared(Number(propertyId));
+          const clearedLogs = await (contractToUse as any).queryFilter(clearedFilter);
+          for (const log of clearedLogs) {
+            const lender: string = log.args?.lender ?? log.args?.[1];
+            const block = provider && log.blockNumber ? await provider.getBlock(log.blockNumber) : null;
+            historyData.push({
+              owner: lender,
+              action: 'lien_cleared',
+              timestamp: new Date(((block?.timestamp ?? 0) as number) * 1000).toLocaleString()
+            });
+          }
+        }
+      } catch (_) {
+        // If events/filters not available, ignore silently
+      }
+
+      // Sort by timestamp descending (fallback to current order if unparsable)
+      const sorted = [...historyData].sort((a, b) => {
+        const ta = Date.parse(a.timestamp) || 0;
+        const tb = Date.parse(b.timestamp) || 0;
+        return tb - ta;
+      });
+
+      setOwnerHistory(sorted);
       setMessage('Property found successfully!');
     } catch (error: any) {
       const errorMessage = error?.reason || error.message || "An unknown error occurred.";
@@ -112,6 +170,16 @@ const SearchProperty: React.FC<SearchPropertyProps> = ({ appState }) => {
                 }
             })()}
           </div>
+          {property.lienActive && (
+            <div className="property-detail">
+              <strong>Lien:</strong> <span className="status-badge status-unverified">ACTIVE</span>
+              <div style={{ marginTop: '6px', color: 'var(--text-light-color)' }}>
+                <div><strong>Lender:</strong> {property.lienLender}</div>
+                <div><strong>Amount:</strong> {property.lienAmount}</div>
+                {property.lienDetails && <div><strong>Details:</strong> {property.lienDetails}</div>}
+              </div>
+            </div>
+          )}
           <div className="property-detail">
             <strong>Current Owner:</strong> <span>{property.currentOwner}</span>
           </div>
