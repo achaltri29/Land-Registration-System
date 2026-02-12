@@ -1,57 +1,70 @@
-const hre = require("hardhat");
+// scripts/deploy.js
+import pkg from "hardhat";
+import dotenv from "dotenv";
+import fs from "fs";
+
+const { ethers, network, run } = pkg;
+
+dotenv.config();
 
 async function main() {
-  console.log("Deploying LandRegistry contract...");
+  console.log("🚀 Deploying LandRegistry contract...");
 
-  // Get the contract factory
-  const LandRegistry = await hre.ethers.getContractFactory("LandRegistry");
+  // 1️⃣ Get the contract factory
+  const LandRegistry = await ethers.getContractFactory("LandRegistry");
 
-  // Deploy the contract
+  // 2️⃣ Deploy the contract
   const landRegistry = await LandRegistry.deploy();
-
-  // Wait for deployment to finish
   await landRegistry.waitForDeployment();
 
   const contractAddress = await landRegistry.getAddress();
+  console.log(`✅ LandRegistry deployed to: ${contractAddress}`);
+  console.log(`👤 Contract owner: ${await landRegistry.owner()}`);
 
-  console.log("LandRegistry deployed to:", contractAddress);
-  console.log("Contract owner:", await landRegistry.owner());
-
-  // Verify deployment on Etherscan if on a live network
-  if (hre.network.name !== "localhost" && hre.network.name !== "hardhat") {
-    console.log("Waiting for block confirmations...");
+  // 3️⃣ Verify on Etherscan (if not local)
+  if (network.name !== "localhost" && network.name !== "hardhat") {
+    console.log("⏳ Waiting for block confirmations before verifying...");
     await landRegistry.deploymentTransaction().wait(6);
-    
+
     try {
-      await hre.run("verify:verify", {
+      await run("verify:verify", {
         address: contractAddress,
         constructorArguments: [],
       });
-      console.log("Contract verified on Etherscan");
+      console.log("🔍 Contract verified on Etherscan ✅");
     } catch (error) {
-      console.log("Verification failed:", error.message);
+      console.log("⚠️  Verification failed:", error.message);
     }
   }
 
-  // Save contract address to a file for frontend/backend use
-  const fs = require('fs');
+  // 4️⃣ Save contract info to JSON
   const contractInfo = {
     address: contractAddress,
-    network: hre.network.name,
-    deployedAt: new Date().toISOString()
+    network: network.name,
+    deployedAt: new Date().toISOString(),
   };
-  
-  fs.writeFileSync(
-    './contract-address.json', 
-    JSON.stringify(contractInfo, null, 2)
-  );
-  
-  console.log("Contract info saved to contract-address.json");
+
+  fs.writeFileSync("./contract-address.json", JSON.stringify(contractInfo, null, 2));
+  console.log("📝 Contract info saved to contract-address.json");
+
+  // 5️⃣ Optionally, update backend/.env CONTRACT_ADDRESS automatically
+  const envPath = "./backend/.env";
+  if (fs.existsSync(envPath)) {
+    let envContent = fs.readFileSync(envPath, "utf-8");
+    if (envContent.match(/CONTRACT_ADDRESS=".*"/)) {
+      envContent = envContent.replace(
+        /CONTRACT_ADDRESS=".*"/,
+        `CONTRACT_ADDRESS="${contractAddress}"`
+      );
+      fs.writeFileSync(envPath, envContent);
+      console.log("🔄 Updated CONTRACT_ADDRESS in backend/.env");
+    }
+  }
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error(error);
+    console.error("❌ Deployment failed:", error);
     process.exit(1);
   });

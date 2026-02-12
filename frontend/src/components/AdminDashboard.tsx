@@ -30,7 +30,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
 
   const handleVerifyProperty = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!appState.contract || !appState.signer) {
       setMessage('Please connect your wallet first');
       return;
@@ -52,13 +52,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
       setPropertyId('');
       fetchTotalProperties();
     } catch (error: any) {
-        const errorMessage = error?.reason || error.message || "An unknown error occurred.";
-        setMessage(`Error: ${errorMessage}`);
+      const errorMessage = error?.reason || error.message || "An unknown error occurred.";
+      setMessage(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
   };
-  
+
   if (!appState.isAdmin) {
     return (
       <div>
@@ -73,7 +73,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
   return (
     <div>
       <h2>Admin Dashboard</h2>
-      
+
       <div className="card">
         <h3>System Statistics</h3>
         <div className="property-detail">
@@ -84,7 +84,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
       <div className="card">
         <h3>Verify Property</h3>
         <p>Enter a property ID to approve and validate its registration on the blockchain.</p>
-        
+
         <form onSubmit={handleVerifyProperty}>
           <div className="form-group">
             <label htmlFor="propertyId">Property ID:</label>
@@ -99,8 +99,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ appState }) => {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="button button-primary"
             disabled={loading || !propertyId}
           >
